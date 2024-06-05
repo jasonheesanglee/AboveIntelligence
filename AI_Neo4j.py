@@ -4,14 +4,18 @@ from neo4j import GraphDatabase
 
 url = 'bolt://localhost:7687'
 with open("config.json") as f:
-    neo4j_auth_id = json.load(f)['neo4j_auth_id']
-    neo4j_auth_pw = json.load(f)['neo4j_auth_pw']
+    neo4j_conf = json.load(f)
+neo4j_auth_id = neo4j_conf['neo4j_auth_id']
+neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
 auth = (neo4j_auth_id, neo4j_auth_pw)
 
 with open("SiwooFamily.json") as f:
     siwoo_fam_data = json.load(f)
 with open("Tools.json") as f:
     tools = json.load(f)
+
+with open("Cities.json") as f:
+    cities = json.load(f)
 
 def add_character(driver, name, character_config):
     query = """
@@ -25,7 +29,36 @@ def add_character(driver, name, character_config):
         hobby=character_config['hobby']
     )
 
-def add_relationships(driver, name, character_config):
+def add_city(driver, name, city_config):
+    query = """
+    MERGE (a:City {name:$name, alias:$alias, country:$country, weather:$weather, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
+    """
+    driver.run(
+        query,
+        name=name,
+        alias=city_config['alias'],
+        country=city_config['country'],
+        weather=city_config['weather'],
+        average_temperature=city_config['average_temperature'],
+        latitude=city_config['latitude'],
+        longitude=city_config['longitude'],
+        altitude=city_config['altitude'],
+        area=city_config['area']        
+    )
+
+def char_city_relationships(driver, char_name, city_name):
+    if city_name is not None:
+        query = """
+        MATCH (a:Character {name:$char_name}), (b:City {name:$city_name})
+        MERGE (a) -[:LIVES_IN]-> (b)
+        """
+        driver.run(
+            query,
+            char_name=char_name,
+            city_name=city_name
+        )
+
+def char_relationships(driver, name, character_config):
     relationships = [
         ("IS_SON_OF", "Child", "Parent"),
         ("IS_DAUGHTER_OF", "Child", "Parent"),
@@ -74,19 +107,18 @@ def add_tools(driver, name, tool_config):
         how_to=tool_config['how_to']
     )
 
-def tools_requirements(driver, tools_config):
-    for tool_name, tool_info in tools_config.items():
-        if tool_info['REQUIRES'] is not None:
-            for required_tool in tool_info['REQUIRES']:
-                query = """
-                MATCH (a: Tools {name:$tool_name}), (b: Tools {name:$required_tool})
-                MERGE (a) -[:REQUIRES]-> (b)
-                """
-                driver.run(
-                    query,
-                    tool_name=tool_name,
-                    required_tool=required_tool
-                )
+def tools_requirements(driver, tool_name, tool_config):
+    if tool_config['REQUIRES'] is not None:
+        for required_tool in tool_config['REQUIRES']:
+            query = """
+            MATCH (a: Tools {name:$tool_name}), (b: Tools {name:$required_tool})
+            MERGE (a) -[:REQUIRES]-> (b)
+            """
+            driver.run(
+                query,
+                tool_name=tool_name,
+                required_tool=required_tool
+            )
 
 def char_tools_relationship(driver, char_name, char_config, tools_config):
     query = '''
@@ -111,7 +143,10 @@ with driver.session() as session:
         add_character(session, name, config)
 
     for name, config in siwoo_fam_data.items():
-        add_relationships(session, name, config)
+        char_relationships(session, name, config)
+
+    for name, config in cities.items():
+        add_city(session, name, config)
 
     for name, config in tools.items():
         add_tools(session, name, config)
@@ -119,4 +154,8 @@ with driver.session() as session:
     for name, config in siwoo_fam_data.items():
         char_tools_relationship(session, name, config, tools)
 
-    tools_requirements(session, tools)
+    for name, config in siwoo_fam_data.items():
+        char_city_relationships(session, name, config['LIVES_IN'])
+    
+    for tool_name, tool_config in tools.items():
+        tools_requirements(session, tool_name, tool_config)
