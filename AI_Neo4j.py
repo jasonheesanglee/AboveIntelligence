@@ -31,19 +31,32 @@ def add_character(driver, name, character_config):
 
 def add_city(driver, name, city_config):
     query = """
-    MERGE (a:City {name:$name, alias:$alias, country:$country, weather:$weather, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
+    MERGE (a:City {name:$name, alias:$alias, country:$country, main_citizen_type:$main_citizen_type weather:$weather, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
     """
     driver.run(
         query,
         name=name,
         alias=city_config['alias'],
         country=city_config['country'],
+        main_citizen_type=city_config['main_citizen_type'],
         weather=city_config['weather'],
         average_temperature=city_config['average_temperature'],
         latitude=city_config['latitude'],
         longitude=city_config['longitude'],
         altitude=city_config['altitude'],
         area=city_config['area']        
+    )
+
+def add_citizen_type(driver, name, citizen_config):
+    query = """
+    MERGE (a:CitizenTypeConfig {name:$name, class:$classes, definition:$definition})
+    """
+    driver.run(
+        query,
+        name=name,
+        classes=citizen_config['classes'],
+        
+        definition=citizen_config['definition']
     )
 
 def char_city_relationships(driver, char_name, city_name):
@@ -57,6 +70,11 @@ def char_city_relationships(driver, char_name, city_name):
             char_name=char_name,
             city_name=city_name
         )
+
+# def add_country(driver, country_name, country_config):
+#     query = """
+#     MERGE (a:Country {name:$name, cities:$cities, ruler:$ruler, })
+#     """
 
 def char_relationships(driver, name, character_config):
     relationships = [
