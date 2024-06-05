@@ -1,0 +1,14 @@
+{
+    "루오에" : {
+        "alias" : "Luoe",
+        "country" : "라브너",
+        "weather" : "",
+        "average_temperature" : 0,
+        "latitude" : 0,
+        "longitude" : 0,
+        "altitude" : 0,
+        "width" : 0,
+        "length" : 0,
+        "shape" : "path/to/shape.png"
+    }
+}

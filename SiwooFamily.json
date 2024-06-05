@@ -1,0 +1,72 @@
+{
+    "강시우" : {
+        "gender" : "male",
+        "age" : 16,
+        "hobby" : ["모험", "에어보드 타기"],
+        "IS_SON_OF" : ["강휘백", "안주희"],
+        "IS_SPOUSE_OF" : null,
+        "IS_BROTHER_OF" : null,
+        "IS_FATHER_OF" : null,
+        "LIVES_IN" : "루오에"
+    },
+    "강휘백" : {
+        "gender" : "male",
+        "age" : 37,
+        "hobby" : ["노바라이드", "산책", "소설책 읽기"],
+        "IS_SON_OF" : ["강현", "장소하"],
+        "IS_SPOUSE_OF" : ["안주희"],
+        "IS_BROTHER_OF" : null,
+        "IS_FATHER_OF" : ["강시우"],
+        "LIVES_IN" : "루오에"
+    },
+    "안주희" : {
+        "gender" : "female",
+        "age" : 39,
+        "hobby" : ["에어제트 타기", "검도"],
+        "IS_DAUGHTER_OF" : ["안진규", "하진희"],
+        "IS_SPOUSE_OF" : ["강휘백"],
+        "IS_SISTER_OF" : null,
+        "IS_MOTHER_OF" : ["강시우"],
+        "LIVES_IN" : "루오에"
+    },
+    "강현" : {
+        "gender" : "male",
+        "age" : 72,
+        "hobby" : ["장기 두기", "체스 두기", "사색에 잠기기"],
+        "IS_SON_OF" : ["강승호", "이재연"],
+        "IS_SPOUSE_OF" : ["장소하"],
+        "IS_BROTHER_OF" : null,
+        "IS_FATHER_OF" : ["강휘백"],
+        "LIVES_IN" : "루오에"
+        },
+    "장소하" : {
+        "gender" : "female",
+        "age" : 76,
+        "hobby" : ["뜨개질", "재즈음악 듣기"],
+        "IS_DAUGHTER_OF" : ["장승원", "박채원"],
+        "IS_SPOUSE_OF" : ["강현"],
+        "IS_SISTER_OF" : null,
+        "IS_MOTHER_OF" : ["강휘백"],
+        "LIVES_IN" : "루오에"
+    },
+    "안진규" : {
+        "gender" : "male",
+        "age" : 66,
+        "hobby" : ["달리기", "무술 대련"],
+        "IS_SON_OF" : ["안치현", "표지현"],
+        "IS_SPOUSE_OF" : ["하진희"],
+        "IS_BROTHER_OF" : null,
+        "IS_FATHER_OF" : ["안주희"],
+        "LIVES_IN" : "루오에"
+    },
+    "하진희" : {
+        "gender" : "female",
+        "age" : 60,
+        "hobby" : ["인공지능 창의력 개발 연구", "그림 그리기"],
+        "IS_DAUGHTER_OF" : ["하충호", "송효이"],
+        "IS_SPOUSE_OF" : ["안진규"],
+        "IS_SISTER_OF" : null,
+        "IS_MOTHER_OF" : ["안주희"],
+        "LIVES_IN" : "루오에"
+    }
+}
