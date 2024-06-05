@@ -813,3 +813,7 @@ Temporary Items
 .idea/
 *.ipynb
 *.json
+Cities.json
+config.json
+Tools.json
+SiwooFamily.json
