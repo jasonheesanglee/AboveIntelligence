@@ -9,6 +9,9 @@ neo4j_auth_id = neo4j_conf['neo4j_auth_id']
 neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
 auth = (neo4j_auth_id, neo4j_auth_pw)
 
+
+with open("InitialNode.json") as f:
+    initial_node = json.load(f)
 with open("Characters.json") as f:
     characters = json.load(f)
 with open("Tools.json") as f:
@@ -20,29 +23,45 @@ with open("Countries.json") as f:
 with open("CitizenType.json") as f:
     citizen_type = json.load(f)
 
-def add_INITIAL(driver):
+def add_INITIAL(driver, name, config):
     query = """
-    MERGE (a: Rank)
-    MERGE (b: Human)
-    MERGE (c: Cultiva)
-    """
-    driver.run(query)
-
-def add_citizen_type(driver, name, citizen_config):
-    query = """
-    MERGE (b:CitizenType {name:$name, class:$class, definition:$definition})
+    MERGE (a: InitialNode {name:$name, alias:$alias, rank:$rank, definition:$definition})
     """
     driver.run(
         query,
         name=name,
+        alias=config['alias'],
+        rank=config['rank'],
+        definition=config['definition']
+        )
+
+
+def add_citizen_type(driver, name, citizen_config):
+    query = """
+    MERGE (b:CitizenType {name:$name, alias:$alias, class:$classes, definition:$definition})
+    """
+    driver.run(
+        query,
+        name=name,
+        alias=citizen_config['alias'],
         classes=citizen_config['class'],
         definition=citizen_config['definition']
     )
 
+def connect_convergent(driver, name):
+    query = """
+    MATCH (a: InitialNode {name:"컨버전트"}), (b: CitizenType {name:$name})
+    MERGE (b) -[:IS_PART_OF]-> (a)
+    """
+    driver.run(
+        query,
+        name=name
+        )
+
 def rank_citizen_type(driver, name):
     query = """
-    MATCH (a: Rank), (b: CitizenType {name:$name})
-    MERGE (a) - (b)
+    MATCH (a: InitialNode {name:"계급"}), (b: CitizenType {name:$name})
+    MERGE (b) -[:IS_PART_OF]-> (a)
     """
     driver.run(
         query,
@@ -51,11 +70,12 @@ def rank_citizen_type(driver, name):
 
 def add_character(driver, name, character_config):
     query = """
-    MERGE (a:Character {name: $name, gender: $gender, age: $age, citizen_type=$citizen_type, hobby: $hobby, characteristics:$characteristics})
+    MERGE (a:Character {name:$name, alias:$alias, gender:$gender, age:$age, citizen_type:$citizen_type, hobby:$hobby, characteristics:$characteristics})
     """
     driver.run(
         query,
         name=name,
+        alias=character_config['alias'],
         gender=character_config['gender'],
         age=character_config['age'],
         citizen_type=character_config['citizen_type'],
@@ -64,94 +84,15 @@ def add_character(driver, name, character_config):
     )
 
 def character_species(driver, name, character_config):
-    human_query = """
-    MATCH (a: Human), (b: Character {name:$name})
-    MERGE (a) - (b)
-    """
-    cultiva_query = """
-    MATCH (a: Cultiva), (b: Character {name:$name})
-    MERGE (a) - (b)
-    """
-
-    if character_config['citizen_type'] == '인간':
-        driver.run(
-            human_query,
-            name=name
-        )
-    else:
-        driver.run(
-            cultiva_query,
-            name=name
-        )
-
-def add_country(driver, name, country_config):
     query = """
-    MERGE (a: Country {name:$name, alias:$alias, latitude:$latitude, longitude:$longitude, capital:$capital, characteristics:$characteristics, population:$population})
+    MATCH (a: InitialNode {name:$node_name}), (b: Character {name:$name})
+    MERGE (b) -[:IS]-> (a)
     """
     driver.run(
         query,
-        name=name,
-        alias=country_config['alias'],
-        latitude=country_config['latitude'],
-        longitude=country_config['longitude'],
-        capital=country_config['capital'],
-        population=country_config['population'],
-        government=country_config['government']
+        node_name=character_config['citizen_type'],
+        name=name
     )
-
-def add_city(driver, name, city_config):
-    query = """
-    MERGE (a:City {name:$name, alias:$alias, country:$country, main_citizen_type:$main_citizen_type weather:$weather, geography:$geography, characteristics:$characteristics, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
-    """
-    driver.run(
-        query,
-        name=name,
-        alias=city_config['alias'],
-        country=city_config['country'],
-        main_citizen_type=city_config['main_citizen_type'],
-        weather=city_config['weather'],
-        geography=city_config['geography'],
-        characteristics=city_config['characteristics'],
-        average_temperature=city_config['average_temperature'],
-        latitude=city_config['latitude'],
-        longitude=city_config['longitude'],
-        altitude=city_config['altitude'],
-        area=city_config['area']
-    )
-
-def country_city_relationships(driver, city_config):
-    capital_query = """
-    MATCH (a: Country {name:$name}), (b:City {name:$city_name})
-    MERGE (b) -[:IS_CAPITAL_OF]-> (a)
-    """
-    non_capital_query = """
-    MATCH (a: Country {name:$name}), (b:City {name:$city_name})
-    MERGE (b) -[:IS_CITY_OF]-> (a)
-    """
-    if city_config['IS_CAPITAL_OF']:
-        driver.run(
-            capital_query,
-            name=city_config['IS_CITY_OF'],
-            city_name=city_config['name']
-            )
-    else:
-        driver.run(
-            non_capital_query,
-            name=city_config['IS_CITY_OF'],
-            city_name=city_config['name']
-            )
-
-def char_city_relationships(driver, char_name, city_name):
-    if city_name is not None:
-        query = """
-        MATCH (a:Character {name:$char_name}), (b:City {name:$city_name})
-        MERGE (a) -[:LIVES_IN]-> (b)
-        """
-        driver.run(
-            query,
-            char_name=char_name,
-            city_name=city_name
-        )
 
 def char_relationships(driver, name, character_config):
     relationships = [
@@ -188,6 +129,76 @@ def char_relationships(driver, name, character_config):
                         name=name,
                         target_name=target_name
                     )
+
+
+def add_country(driver, name, country_config):
+    query = """
+    MERGE (a: Country {name:$name, alias:$alias, area:$area, latitude:$latitude, longitude:$longitude, capital:$capital, characteristics:$characteristics, population:$population})
+    """
+    driver.run(
+        query,
+        name=name,
+        alias=country_config['alias'],
+        area=country_config['area'],
+        latitude=country_config['latitude'],
+        longitude=country_config['longitude'],
+        capital=country_config['capital'],
+        characteristics=country_config['characteristics'],
+        population=country_config['population'],
+
+    )
+
+def add_city(driver, name, city_config):
+    query = """
+    MERGE (a:City {name:$name, alias:$alias, country:$country, main_citizen_type:$main_citizen_type, weather:$weather, geography:$geography, characteristics:$characteristics, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
+    """
+    driver.run(
+        query,
+        name=name,
+        alias=city_config['alias'],
+        country=city_config['country'],
+        main_citizen_type=city_config['main_citizen_type'],
+        weather=city_config['weather'],
+        geography=city_config['geography'],
+        characteristics=city_config['characteristics'],
+        average_temperature=str(city_config['average_temperature']),
+        latitude=city_config['latitude'],
+        longitude=city_config['longitude'],
+        altitude=city_config['altitude'],
+        area=city_config['area']
+    )
+
+def country_city_relationships(driver, name, city_config):
+    if city_config['IS_CAPITAL_OF']=="TRUE":
+        query = """
+        MATCH (a: Country {name:$name}), (b:City {name:$city_name})
+        MERGE (b) -[:IS_CAPITAL_OF]-> (a)
+        """
+    else:
+        query = """
+        MATCH (a: Country {name:$name}), (b:City {name:$city_name})
+        MERGE (b) -[:IS_CITY_OF]-> (a)
+        """
+    if city_config['IS_CAPITAL_OF']:
+        driver.run(
+            query,
+            name=city_config['IS_CITY_OF'],
+            city_name=name
+            )
+
+# --------------------------------------------
+
+def char_city_relationships(driver, char_name, char_config):
+    if char_config['LIVES_IN'] is not None:
+        query = """
+        MATCH (a:Character {name:$char_name}), (b:City {name:$city_name})
+        MERGE (a) -[:LIVES_IN]-> (b)
+        """
+        driver.run(
+            query,
+            char_name=char_name,
+            city_name=char_config['LIVES_IN']
+        )
 
 def add_tools(driver, name, tool_config):
     query = """
@@ -234,10 +245,15 @@ def char_tools_relationship(driver, char_name, char_config, tools_config):
 driver = GraphDatabase.driver(url, auth=auth)
 
 with driver.session() as session:
-    add_INITIAL(driver)
+    for name, config in initial_node.items():
+        add_INITIAL(session, name, config)
+
     for name, config in citizen_type.items():
         add_citizen_type(session, name, config)
-        rank_citizen_type(session, name)
+        connect_convergent(session, name)
+        if name != "노마드" :
+            rank_citizen_type(session, name)
+        
 
     for name, config in characters.items():
         add_character(session, name, config)
@@ -251,16 +267,16 @@ with driver.session() as session:
 
     for name, config in cities.items():
         add_city(session, name, config)
-        country_city_relationships(session, config)
+        country_city_relationships(session, name, config)
+
+    for name, config in characters.items():
+        char_city_relationships(session, name, config)
 
     for name, config in tools.items():
         add_tools(session, name, config)
 
     for name, config in characters.items():
         char_tools_relationship(session, name, config, tools)
-
-    for name, config in characters.items():
-        char_city_relationships(session, name, config['LIVES_IN'])
     
     for tool_name, tool_config in tools.items():
         tools_requirements(session, tool_name, tool_config)
