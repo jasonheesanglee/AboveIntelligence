@@ -250,7 +250,8 @@ with driver.session() as session:
 
     for name, config in citizen_type.items():
         add_citizen_type(session, name, config)
-        connect_convergent(session, name)
+        if name != "현자":
+            connect_convergent(session, name)
         if name != "노마드" :
             rank_citizen_type(session, name)
         
