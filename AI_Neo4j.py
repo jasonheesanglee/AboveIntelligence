@@ -9,29 +9,99 @@ neo4j_auth_id = neo4j_conf['neo4j_auth_id']
 neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
 auth = (neo4j_auth_id, neo4j_auth_pw)
 
-with open("SiwooFamily.json") as f:
-    siwoo_fam_data = json.load(f)
+with open("Characters.json") as f:
+    characters = json.load(f)
 with open("Tools.json") as f:
     tools = json.load(f)
-
 with open("Cities.json") as f:
     cities = json.load(f)
+with open("Countries.json") as f:
+    countries = json.load(f)
+with open("CitizenType.json") as f:
+    citizen_type = json.load(f)
+
+def add_INITIAL(driver):
+    query = """
+    MERGE (a: Rank)
+    MERGE (b: Human)
+    MERGE (c: Cultiva)
+    """
+    driver.run(query)
+
+def add_citizen_type(driver, name, citizen_config):
+    query = """
+    MERGE (b:CitizenType {name:$name, class:$class, definition:$definition})
+    """
+    driver.run(
+        query,
+        name=name,
+        classes=citizen_config['class'],
+        definition=citizen_config['definition']
+    )
+
+def rank_citizen_type(driver, name):
+    query = """
+    MATCH (a: Rank), (b: CitizenType {name:$name})
+    MERGE (a) - (b)
+    """
+    driver.run(
+        query,
+        name=name
+        )
 
 def add_character(driver, name, character_config):
     query = """
-    MERGE (a:Character {name: $name, gender: $gender, age: $age, hobby: $hobby})
+    MERGE (a:Character {name: $name, gender: $gender, age: $age, citizen_type=$citizen_type, hobby: $hobby, characteristics:$characteristics})
     """
     driver.run(
         query,
         name=name,
         gender=character_config['gender'],
         age=character_config['age'],
-        hobby=character_config['hobby']
+        citizen_type=character_config['citizen_type'],
+        hobby=character_config['hobby'],
+        characteristics=character_config['characteristics']
+    )
+
+def character_species(driver, name, character_config):
+    human_query = """
+    MATCH (a: Human), (b: Character {name:$name})
+    MERGE (a) - (b)
+    """
+    cultiva_query = """
+    MATCH (a: Cultiva), (b: Character {name:$name})
+    MERGE (a) - (b)
+    """
+
+    if character_config['citizen_type'] == '인간':
+        driver.run(
+            human_query,
+            name=name
+        )
+    else:
+        driver.run(
+            cultiva_query,
+            name=name
+        )
+
+def add_country(driver, name, country_config):
+    query = """
+    MERGE (a: Country {name:$name, alias:$alias, latitude:$latitude, longitude:$longitude, capital:$capital, characteristics:$characteristics, population:$population})
+    """
+    driver.run(
+        query,
+        name=name,
+        alias=country_config['alias'],
+        latitude=country_config['latitude'],
+        longitude=country_config['longitude'],
+        capital=country_config['capital'],
+        population=country_config['population'],
+        government=country_config['government']
     )
 
 def add_city(driver, name, city_config):
     query = """
-    MERGE (a:City {name:$name, alias:$alias, country:$country, main_citizen_type:$main_citizen_type weather:$weather, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
+    MERGE (a:City {name:$name, alias:$alias, country:$country, main_citizen_type:$main_citizen_type weather:$weather, geography:$geography, characteristics:$characteristics, average_temperature:$average_temperature, latitude:$latitude, longitude:$longitude, altitude_m:$altitude, area_km2:$area})
     """
     driver.run(
         query,
@@ -40,24 +110,36 @@ def add_city(driver, name, city_config):
         country=city_config['country'],
         main_citizen_type=city_config['main_citizen_type'],
         weather=city_config['weather'],
+        geography=city_config['geography'],
+        characteristics=city_config['characteristics'],
         average_temperature=city_config['average_temperature'],
         latitude=city_config['latitude'],
         longitude=city_config['longitude'],
         altitude=city_config['altitude'],
-        area=city_config['area']        
+        area=city_config['area']
     )
 
-def add_citizen_type(driver, name, citizen_config):
-    query = """
-    MERGE (a:CitizenTypeConfig {name:$name, class:$classes, definition:$definition})
+def country_city_relationships(driver, city_config):
+    capital_query = """
+    MATCH (a: Country {name:$name}), (b:City {name:$city_name})
+    MERGE (b) -[:IS_CAPITAL_OF]-> (a)
     """
-    driver.run(
-        query,
-        name=name,
-        classes=citizen_config['classes'],
-        
-        definition=citizen_config['definition']
-    )
+    non_capital_query = """
+    MATCH (a: Country {name:$name}), (b:City {name:$city_name})
+    MERGE (b) -[:IS_CITY_OF]-> (a)
+    """
+    if city_config['IS_CAPITAL_OF']:
+        driver.run(
+            capital_query,
+            name=city_config['IS_CITY_OF'],
+            city_name=city_config['name']
+            )
+    else:
+        driver.run(
+            non_capital_query,
+            name=city_config['IS_CITY_OF'],
+            city_name=city_config['name']
+            )
 
 def char_city_relationships(driver, char_name, city_name):
     if city_name is not None:
@@ -70,11 +152,6 @@ def char_city_relationships(driver, char_name, city_name):
             char_name=char_name,
             city_name=city_name
         )
-
-# def add_country(driver, country_name, country_config):
-#     query = """
-#     MERGE (a:Country {name:$name, cities:$cities, ruler:$ruler, })
-#     """
 
 def char_relationships(driver, name, character_config):
     relationships = [
@@ -157,23 +234,36 @@ def char_tools_relationship(driver, char_name, char_config, tools_config):
 driver = GraphDatabase.driver(url, auth=auth)
 
 with driver.session() as session:
-    for name, config in siwoo_fam_data.items():
-        add_character(session, name, config)
+    add_INITIAL(driver)
+    for name, config in citizen_type.items():
+        add_citizen_type(session, name, config)
+        rank_citizen_type(session, name)
 
-    for name, config in siwoo_fam_data.items():
+    for name, config in characters.items():
+        add_character(session, name, config)
+        character_species(session, name, config)
+
+    for name, config in characters.items():
         char_relationships(session, name, config)
+
+    for name, config in countries.items():
+        add_country(session, name, config)
 
     for name, config in cities.items():
         add_city(session, name, config)
+        country_city_relationships(session, config)
 
     for name, config in tools.items():
         add_tools(session, name, config)
 
-    for name, config in siwoo_fam_data.items():
+    for name, config in characters.items():
         char_tools_relationship(session, name, config, tools)
 
-    for name, config in siwoo_fam_data.items():
+    for name, config in characters.items():
         char_city_relationships(session, name, config['LIVES_IN'])
     
     for tool_name, tool_config in tools.items():
         tools_requirements(session, tool_name, tool_config)
+
+
+
