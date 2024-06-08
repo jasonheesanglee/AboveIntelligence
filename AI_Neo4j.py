@@ -48,15 +48,16 @@ def add_citizen_type(driver, name, citizen_config):
         definition=citizen_config['definition']
     )
 
-def connect_convergent(driver, name):
-    query = """
-    MATCH (a: InitialNode {name:"컨버전트"}), (b: CitizenType {name:$name})
-    MERGE (b) -[:IS_PART_OF]-> (a)
-    """
-    driver.run(
-        query,
-        name=name
-        )
+def connect_convergent(driver, char_name, char_config):
+    if char_config['citizen_type'] != "인간":
+        query = """
+        MATCH (a: InitialNode {name:"컨버전트"}), (b: Character {name:$name})
+        MERGE (b) -[:IS]-> (a)
+        """
+        driver.run(
+            query,
+            name=char_name
+            )
 
 def rank_citizen_type(driver, name):
     query = """
@@ -114,7 +115,7 @@ def char_relationships(driver, name, character_config):
         ("LIVES_IN", "Resident", "City")
     ]
 
-    for rel, source, target in relationships:
+    for rel, _, _ in relationships:
         if character_config.get(rel):
             if rel == "LIVES_IN":
                 if character_config[rel] == "노마드": 
@@ -224,17 +225,17 @@ def country_city_relationships(driver, name, city_config):
 
 # --------------------------------------------
 
-def char_city_relationships(driver, char_name, char_config):
-    if char_config['LIVES_IN'] is not None:
-        query = """
-        MATCH (a:Character {name:$char_name}), (b:City {name:$city_name})
-        MERGE (a) -[:LIVES_IN]-> (b)
-        """
-        driver.run(
-            query,
-            char_name=char_name,
-            city_name=char_config['LIVES_IN']
-        )
+# def char_city_relationships(driver, char_name, char_config):
+#     if char_config['LIVES_IN'] is not None:
+#         query = """
+#         MATCH (a:Character {name:$char_name}), (b:City {name:$city_name})
+#         MERGE (a) -[:LIVES_IN]-> (b)
+#         """
+#         driver.run(
+#             query,
+#             char_name=char_name,
+#             city_name=char_config['LIVES_IN']
+#         )
 
 def add_tools(driver, name, tool_config):
     query = """
@@ -296,18 +297,16 @@ with driver.session() as session:
 
     for name, config in citizen_type.items():
         add_citizen_type(session, name, config)
-        if name != "현자":
-            connect_convergent(session, name)
         if name != "노마드" :
             rank_citizen_type(session, name)
         
-
     for name, config in characters.items():
         add_character(session, name, config)
         character_species(session, name, config)
 
     for name, config in characters.items():
         char_relationships(session, name, config)
+        connect_convergent(session, name, config)
 
     for name, config in countries.items():
         add_country(session, name, config)
@@ -316,8 +315,8 @@ with driver.session() as session:
         add_city(session, name, config)
         country_city_relationships(session, name, config)
 
-    for name, config in characters.items():
-        char_city_relationships(session, name, config)
+    # for name, config in characters.items():
+    #     char_city_relationships(session, name, config)
 
     for name, config in tools.items():
         add_tools(session, name, config)
