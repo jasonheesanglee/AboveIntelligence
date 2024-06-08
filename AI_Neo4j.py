@@ -84,10 +84,18 @@ def add_character(driver, name, character_config):
     )
 
 def character_species(driver, name, character_config):
-    query = """
-    MATCH (a: InitialNode {name:$node_name}), (b: Character {name:$name})
-    MERGE (b) -[:IS]-> (a)
-    """
+    if character_config['citizen_type'] == "인간":
+        query = """
+        MATCH (a: InitialNode {name:$node_name}), (b: Character {name:$name})
+        MERGE (b) -[:IS]-> (a)
+        """
+
+    else:
+        query = """
+        MATCH (a: CitizenType {name:$node_name}), (b: Character {name:$name})
+        MERGE (b) -[:IS]-> (a)
+        """
+    
     driver.run(
         query,
         node_name=character_config['citizen_type'],
@@ -109,10 +117,17 @@ def char_relationships(driver, name, character_config):
     for rel, source, target in relationships:
         if character_config.get(rel):
             if rel == "LIVES_IN":
-                query = """
-                MATCH (a:Character {name: $name}), (b:City {name: $target})
-                MERGE (a)-[:LIVES_IN]->(b)
-                """
+                if character_config[rel] == "노마드": 
+                    query = """
+                    MATCH (a:Character {name: $name}), (b:Country {name: $target})
+                    MERGE (a)-[:LIVES_IN]->(b)
+                    """
+                else:
+                    query = """
+                    MATCH (a:Character {name: $name}), (b:City {name: $target})
+                    MERGE (a)-[:LIVES_IN]->(b)
+                    """
+                
                 driver.run(
                     query,
                     name=name,
@@ -130,6 +145,27 @@ def char_relationships(driver, name, character_config):
                         target_name=target_name
                     )
 
+    if character_config["IS_FRIEND_OF"]:
+        for friend in character_config["IS_FRIEND_OF"]:
+            query = """
+            MATCH (a: Character {name:$name}), (b: Character {name:$target})
+            MERGE (a) <-[:IS_FRIENDS_OF]-> (b)
+            """
+            driver.run(
+                query,
+                name=name,
+                target=friend
+            )
+    
+    if character_config['IS_PRINCIPAL'] == 'TRUE':
+        query = """
+        MATCH (a:Character {name:$name}), (b:CitizenType {name:"현자"})
+        MERGE (a) -[:IS]->(b)
+        """
+        driver.run(
+            query,
+            name=name
+            )
 
 def add_country(driver, name, country_config):
     query = """
@@ -210,21 +246,32 @@ def add_tools(driver, name, tool_config):
         type=tool_config['type'],
         alias=tool_config['alias'],
         explanation=tool_config['explanation'],
-        how_to=tool_config['how_to']
+        how_to=tool_config['how_to'],
+        made_by=tool_config['made_by']
     )
 
 def tools_requirements(driver, tool_name, tool_config):
-    if tool_config['REQUIRES'] is not None:
-        for required_tool in tool_config['REQUIRES']:
-            query = """
+    query = """
             MATCH (a: Tools {name:$tool_name}), (b: Tools {name:$required_tool})
             MERGE (a) -[:REQUIRES]-> (b)
             """
+    if tool_config['REQUIRES'] is not None:
+        for required_tool in tool_config['REQUIRES']:
             driver.run(
                 query,
                 tool_name=tool_name,
                 required_tool=required_tool
             )
+    made_by_query = """
+                    MATCH (c:Tools {name: $tool_name}), (d:Character {name: $name})
+                    MERGE (c)-[:IS_MADE_BY]->(d)
+                    """
+    if tool_config['made_by'] is not None:
+        driver.run(
+            made_by_query,
+            name=tool_config['made_by'],
+            tool_name=tool_name
+        )
 
 def char_tools_relationship(driver, char_name, char_config, tools_config):
     query = '''
@@ -240,7 +287,6 @@ def char_tools_relationship(driver, char_name, char_config, tools_config):
                     name=char_name,
                     tool_name=hobby
                 )
-            
 
 driver = GraphDatabase.driver(url, auth=auth)
 
