@@ -111,29 +111,13 @@ def char_relationships(driver, name, character_config):
         ("IS_BROTHER_OF", "Sibling", "Sibling"),
         ("IS_SISTER_OF", "Sibling", "Sibling"),
         ("IS_FATHER_OF", "Parent", "Child"),
-        ("IS_MOTHER_OF", "Parent", "Child"),
-        ("LIVES_IN", "Resident", "City")
+        ("IS_MOTHER_OF", "Parent", "Child")
     ]
 
     for rel, _, _ in relationships:
         if character_config.get(rel):
             if rel == "LIVES_IN":
-                if "노마드" in character_config[rel]: 
-                    query = """
-                    MATCH (a:Character {name: $name}), (b:Country {name: $target})
-                    MERGE (a)-[:LIVES_IN]->(b)
-                    """
-                else:
-                    query = """
-                    MATCH (a:Character {name: $name}), (b:City {name: $target})
-                    MERGE (a)-[:LIVES_IN]->(b)
-                    """
-                
-                driver.run(
-                    query,
-                    name=name,
-                    target=character_config[rel]
-                )
+                pass
             else:
                 for target_name in character_config[rel]:
                     query = f"""
@@ -167,6 +151,24 @@ def char_relationships(driver, name, character_config):
             query,
             name=name
             )
+
+    if character_config['LIVES_IN']:
+        for city in character_config['LIVES_IN']:
+            if "노마드" in city:
+                query = """
+                MATCH (a:Character {name:$name}), (b:Country {name:$target_name})
+                MERGE (a) -[:LIVES_IN]-> (b)
+                """
+            else:
+                query = """
+                MATCH (a:Character {name:$name}), (b:City {name:$target_name})
+                MERGE (a) -[:LIVES_IN]-> (b)
+                """
+            driver.run(
+                query,
+                name=name,
+                target_name=city
+                )
 
 def add_country(driver, name, country_config):
     query = """
@@ -304,16 +306,16 @@ with driver.session() as session:
         add_character(session, name, config)
         character_species(session, name, config)
 
-    for name, config in characters.items():
-        char_relationships(session, name, config)
-        connect_convergent(session, name, config)
-
     for name, config in countries.items():
         add_country(session, name, config)
 
     for name, config in cities.items():
         add_city(session, name, config)
         country_city_relationships(session, name, config)
+
+    for name, config in characters.items():
+        char_relationships(session, name, config)
+        connect_convergent(session, name, config)
 
     # for name, config in characters.items():
     #     char_city_relationships(session, name, config)
