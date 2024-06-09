@@ -172,7 +172,7 @@ def char_relationships(driver, name, character_config):
 
 def add_country(driver, name, country_config):
     query = """
-    MERGE (a: Country {name:$name, alias:$alias, area:$area, latitude:$latitude, longitude:$longitude, capital:$capital, characteristics:$characteristics, population:$population})
+    MERGE (a: Country {name:$name, alias:$alias, area:$area, latitude:$latitude, longitude:$longitude, capital:$capital, characteristics:$characteristics, population_approx:$population})
     """
     driver.run(
         query,
