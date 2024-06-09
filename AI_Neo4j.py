@@ -118,7 +118,7 @@ def char_relationships(driver, name, character_config):
     for rel, _, _ in relationships:
         if character_config.get(rel):
             if rel == "LIVES_IN":
-                if character_config[rel] == "노마드": 
+                if "노마드" in character_config[rel]: 
                     query = """
                     MATCH (a:Character {name: $name}), (b:Country {name: $target})
                     MERGE (a)-[:LIVES_IN]->(b)
