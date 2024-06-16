@@ -12,6 +12,4 @@
   아이디어 유출 방지로 구현에 활용되는 데이터 파일들은 공개가 어려운 점 양해 부탁드립니다.<br>
 </p>
 
-<p align="right">
-  <img width=70 src="https://github.com/jasonheesanglee/AboveIntelligence/assets/123557477/fb931687-699e-40e0-8646-7a81d020f237">
-</p>
+<p align='left' xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><sub><a property="dct:title" rel="cc:attributionURL" href="https://github.com/jasonheesanglee/AboveIntelligence/blob/main/README.md">AboveIntelligence</a> by <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://github.com/jasonheesanglee">JasonHeesangLee</a><br> is licensed under <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International<br><img style="height:15px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:15px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:15px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt=""><img style="height:15px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nd.svg?ref=chooser-v1" alt=""></a></sub></p>
