@@ -2,25 +2,25 @@ import re
 import json
 from neo4j import GraphDatabase
 
-url = 'bolt://localhost:7687'
-with open("../json_files/config.json") as f:
+url = 'neo4j+s://77dce401.databases.neo4j.io'
+with open("json_files/config.json") as f:
     neo4j_conf = json.load(f)
 neo4j_auth_id = neo4j_conf['neo4j_auth_id']
 neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
 auth = (neo4j_auth_id, neo4j_auth_pw)
 
 
-with open("../json_files/InitialNode.json") as f:
+with open("json_files/InitialNode.json") as f:
     initial_node = json.load(f)
-with open("../json_files/Characters.json") as f:
+with open("json_files/Characters.json") as f:
     characters = json.load(f)
-with open("../json_files/Tools.json") as f:
+with open("json_files/Tools.json") as f:
     tools = json.load(f)
-with open("../json_files/Cities.json") as f:
+with open("json_files/Cities.json") as f:
     cities = json.load(f)
-with open("../json_files/Countries.json") as f:
+with open("json_files/Countries.json") as f:
     countries = json.load(f)
-with open("../json_files/CitizenType.json") as f:
+with open("json_files/CitizenType.json") as f:
     citizen_type = json.load(f)
 
 def add_INITIAL(driver, name, config):
@@ -141,7 +141,7 @@ def char_relationships(driver, name, character_config):
                 name=name,
                 target=friend
             )
-            
+
     if character_config["LOVES"]:
         for friend in character_config["LOVES"]:
             query = """
@@ -327,43 +327,45 @@ def char_tools_relationship(driver, char_name, char_config, tools_config):
                     tool_name=hobby
                 )
 
-driver = GraphDatabase.driver(url, auth=auth)
+driver = GraphDatabase.driver(url, auth=auth, max_connection_lifetime=30, connection_timeout=30)
 
 with driver.session() as session:
-    for name, config in initial_node.items():
-        add_INITIAL(session, name, config)
+    try:
+        for name, config in initial_node.items():
+            add_INITIAL(session, name, config)
 
-    for name, config in citizen_type.items():
-        add_citizen_type(session, name, config)
-        if name != "노마드" :
-            rank_citizen_type(session, name)
+        for name, config in citizen_type.items():
+            add_citizen_type(session, name, config)
+            if name != "노마드" :
+                rank_citizen_type(session, name)
+            
+        for name, config in characters.items():
+            add_character(session, name, config)
+            character_species(session, name, config)
+
+        for name, config in countries.items():
+            add_country(session, name, config)
+
+        for name, config in cities.items():
+            add_city(session, name, config)
+            country_city_relationships(session, name, config)
+
+        for name, config in characters.items():
+            char_relationships(session, name, config)
+            connect_convergent(session, name, config)
+
+        # for name, config in characters.items():
+        #     char_city_relationships(session, name, config)
+
+        for name, config in tools.items():
+            add_tools(session, name, config)
+
+        for name, config in characters.items():
+            char_tools_relationship(session, name, config, tools)
         
-    for name, config in characters.items():
-        add_character(session, name, config)
-        character_species(session, name, config)
-
-    for name, config in countries.items():
-        add_country(session, name, config)
-
-    for name, config in cities.items():
-        add_city(session, name, config)
-        country_city_relationships(session, name, config)
-
-    for name, config in characters.items():
-        char_relationships(session, name, config)
-        connect_convergent(session, name, config)
-
-    # for name, config in characters.items():
-    #     char_city_relationships(session, name, config)
-
-    for name, config in tools.items():
-        add_tools(session, name, config)
-
-    for name, config in characters.items():
-        char_tools_relationship(session, name, config, tools)
-    
-    for tool_name, tool_config in tools.items():
-        tools_requirements(session, tool_name, tool_config)
-
+        for tool_name, tool_config in tools.items():
+            tools_requirements(session, tool_name, tool_config)
+    finally:
+        driver.close()
 
 
