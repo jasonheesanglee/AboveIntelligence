@@ -11,3 +11,7 @@
   본 레포지토리는 탄탄한 구성을 가진 소설을 만들기 위해 GraphDB를 활용하여 모든 인물, 장소, 또, 소설 내 대부분의 것에 대한 관계도를 만듭니다.<br>
   아이디어 유출 방지로 구현에 활용되는 데이터 파일들은 공개가 어려운 점 양해 부탁드립니다.<br>
 </p>
+
+<p align="right">
+  <img width=70 src="https://github.com/jasonheesanglee/AboveIntelligence/assets/123557477/fb931687-699e-40e0-8646-7a81d020f237">
+</p>
