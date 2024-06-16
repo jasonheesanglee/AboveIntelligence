@@ -141,7 +141,43 @@ def char_relationships(driver, name, character_config):
                 name=name,
                 target=friend
             )
-    
+            
+    if character_config["LOVES"]:
+        for friend in character_config["LOVES"]:
+            query = """
+            MATCH (a: Character {name:$name}), (b: Character {name:$target})
+            MERGE (a) -[:LOVES]-> (b)
+            """
+            driver.run(
+                query,
+                name=name,
+                target=friend
+            )
+
+    if character_config["KNOWS"]:
+        for friend in character_config["KNOWS"]:
+            query = """
+            MATCH (a: Character {name:$name}), (b: Character {name:$target})
+            MERGE (a) -[:KNOWS]-> (b)
+            """
+            driver.run(
+                query,
+                name=name,
+                target=friend
+            )
+
+    if character_config["HATES"]:
+        for friend in character_config["HATES"]:
+            query = """
+            MATCH (a: Character {name:$name}), (b: Character {name:$target})
+            MERGE (a) -[:HATES]-> (b)
+            """
+            driver.run(
+                query,
+                name=name,
+                target=friend
+            )
+
     if character_config['IS_PRINCIPAL'] == 'TRUE':
         query = """
         MATCH (a:Character {name:$name}), (b:CitizenType {name:"현자"})
