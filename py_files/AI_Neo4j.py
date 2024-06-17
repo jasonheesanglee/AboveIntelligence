@@ -2,14 +2,8 @@ import re
 import json
 from neo4j import GraphDatabase
 
-url = 'neo4j+s://77dce401.databases.neo4j.io'
 with open("json_files/config.json") as f:
     neo4j_conf = json.load(f)
-neo4j_auth_id = neo4j_conf['neo4j_auth_id']
-neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
-auth = (neo4j_auth_id, neo4j_auth_pw)
-
-
 with open("json_files/InitialNode.json") as f:
     initial_node = json.load(f)
 with open("json_files/Characters.json") as f:
@@ -22,6 +16,13 @@ with open("json_files/Countries.json") as f:
     countries = json.load(f)
 with open("json_files/CitizenType.json") as f:
     citizen_type = json.load(f)
+
+url = 'neo4j+s://77dce401.databases.neo4j.io'
+neo4j_auth_id = neo4j_conf['neo4j_auth_id']
+neo4j_auth_pw = neo4j_conf['neo4j_auth_pw']
+auth = (neo4j_auth_id, neo4j_auth_pw)
+
+
 
 def add_INITIAL(driver, name, config):
     query = """
