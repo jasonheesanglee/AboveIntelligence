@@ -71,14 +71,15 @@ def rank_citizen_type(driver, name):
 
 def add_character(driver, name, character_config):
     query = """
-    MERGE (a:Character {name:$name, alias:$alias, gender:$gender, age:$age, citizen_type:$citizen_type, hobby:$hobby, characteristics:$characteristics})
+    MERGE (a:Character {name:$name, alias:$alias, gender:$gender, age_2237:$age_2237, age_2249:$age_2249, citizen_type:$citizen_type, hobby:$hobby, characteristics:$characteristics})
     """
     driver.run(
         query,
         name=name,
         alias=character_config['alias'],
         gender=character_config['gender'],
-        age=character_config['age'],
+        age_2237=character_config['age_2237'],
+        age_2249=character_config['age_2249'],
         citizen_type=character_config['citizen_type'],
         hobby=character_config['hobby'],
         characteristics=character_config['characteristics']
