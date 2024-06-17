@@ -814,3 +814,5 @@ Temporary Items
 *.ipynb
 *.json
 *.png
+*.txt
+
